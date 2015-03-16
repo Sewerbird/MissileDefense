@@ -39,8 +39,8 @@ function showField(id, gamestate){
 		txt.setAttribute("fill","white")
 		var txtNode = document.createTextNode("THE END")
 		txt.appendChild(txtNode);
+		fade.onclick = window.location.reload.bind(window.location)
 		svg.appendChild(txt)
-
 		return;
 	}
 	var display = document.getElementById(id)
