@@ -1,4 +1,4 @@
-Mastermind
+Missile Defense
 ==========
 
-A quick implementation of the Mastermind game
+A quick implementation of the Missile Defense game
