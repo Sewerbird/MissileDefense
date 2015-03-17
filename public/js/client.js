@@ -186,35 +186,23 @@ function showField(id, gamestate){
 function update(gamestate, dt){
 	//advance time
 	gamestate.time += dt;
-	//filter out missiles that have gone off screen
-	gamestate.missiles = _.filter(gamestate.missiles, function(missile){
-		var mState = missile(gamestate.time);
-		return mState.x > 0 && mState.x < 600 && mState.y < 400//on screen
-	})
-	//find missiles that are going to explode due to nearness to each other
 	gamestate.missiles = _.filter(gamestate.missiles, function(missile, n){
-		var missilestate = missile(gamestate.time)
+		//filter out missiles that have gone off screen
+		var missilestate = missile(gamestate.time);
+		var isOnScreen = missilestate.x > 0 && missilestate.x < 600 && missilestate.y < 400//on screen
+		//find missiles that are going to explode due to nearness to each other
 		var didNotExplode = true;
-		for(var i = 0; i < gamestate.missiles.length; i ++)
+		_.each(gamestate.missiles, function(other, i))
 		{
 			if(i === n) continue;
-			var otherstate = gamestate.missiles[i](gamestate.time)
+			var otherstate = other(gamestate.time)
 			if(Math.pow(otherstate.x - missilestate.x,2) + Math.pow(otherstate.y-missilestate.y,2) < 100)
 			{
 				gamestate.explosions.push(spawnExplosion(gamestate.time,missilestate.x, missilestate.y))
 				didNotExplode = false;
-				break;
 			}
 		}
-		return didNotExplode
-	})
-	//find explosions that are done exploding
-	gamestate.explosions = _.filter(gamestate.explosions, function(explosion){
-		return explosion(gamestate.time).active
-	})
-	//find missiles that have hit a town
-	gamestate.missiles = _.filter(gamestate.missiles, function(missile){
-		var missilestate = missile(gamestate.time)
+		//find missiles that have hit a town
 		var didNotStrike = true;
 		_.each(gamestate.cities, function(city, i){
 			if(missilestate.x >= city.x && missilestate.x <= city.x + city.width &&
@@ -226,11 +214,7 @@ function update(gamestate, dt){
 				gamestate.explosions.push(spawnExplosion(gamestate.time, missilestate.x, missilestate.y))
 			}
 		})
-		return didNotStrike
-	})
-	//find missiles that have gone below the ground
-	gamestate.missiles = _.filter(gamestate.missiles, function(missile){
-		var missilestate = missile(gamestate.time)
+		//find missiles that have hit the ground
 		var didNotLandstrike = true;
 		if(missilestate.y > 375 ||
 			(missilestate.y > 350 && missilestate.x < 50) ||
@@ -239,7 +223,11 @@ function update(gamestate, dt){
 			didNotLandstrike = false;
 			gamestate.explosions.push(spawnExplosion(gamestate.time, missilestate.x, missilestate.y))
 		}
-		return didNotLandstrike;
+		return didNotLandstrike && didNotStrike && didNotExplode && isOnScreen;
+	})
+	//find explosions that are done exploding
+	gamestate.explosions = _.filter(gamestate.explosions, function(explosion){
+		return explosion(gamestate.time).active
 	})
 	//See if hope survies
 	var siloActive = false;
