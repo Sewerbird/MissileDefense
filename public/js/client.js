@@ -11,6 +11,7 @@ var gameState = {
 	missiles : [],
 	explosions : [],
 	time: 0,
+	score: 0,
 	HOPE_LIVES: true,
 	PROJECTION_ENABLED: true,
 	ANALYSIS_ENABLED: true,
@@ -43,7 +44,7 @@ function showField(id, gamestate){
 		txt2.setAttribute("y",250)
 		txt2.setAttribute("text-anchor","middle")
 		txt2.setAttribute("fill","white")
-		var scoreNode = document.createTextNode("Score: "+Math.floor(gamestate.time))
+		var scoreNode = document.createTextNode("Score: "+Math.floor(gamestate.score))
 		txt.appendChild(txtNode);
 		txt2.appendChild(scoreNode);
 		fade.onclick = window.location.reload.bind(window.location)
@@ -147,7 +148,7 @@ function showField(id, gamestate){
 		txt.setAttribute("x",5)
 		txt.setAttribute("y",395)
 		txt.setAttribute("fill","white")
-		var txtNode = document.createTextNode("Score: "+Math.floor(gamestate.time))
+		var txtNode = document.createTextNode("Score: "+Math.floor(gamestate.score))
 		txt.appendChild(txtNode);
 		svg.appendChild(txt)
 	}
@@ -192,16 +193,16 @@ function update(gamestate, dt){
 		var isOnScreen = missilestate.x > 0 && missilestate.x < 600 && missilestate.y < 400//on screen
 		//find missiles that are going to explode due to nearness to each other
 		var didNotExplode = true;
-		_.each(gamestate.missiles, function(other, i))
+		_.each(gamestate.missiles, function(other, i)
 		{
-			if(i === n) continue;
+			if(i === n) return;
 			var otherstate = other(gamestate.time)
 			if(Math.pow(otherstate.x - missilestate.x,2) + Math.pow(otherstate.y-missilestate.y,2) < 100)
 			{
 				gamestate.explosions.push(spawnExplosion(gamestate.time,missilestate.x, missilestate.y))
 				didNotExplode = false;
 			}
-		}
+		})
 		//find missiles that have hit a town
 		var didNotStrike = true;
 		_.each(gamestate.cities, function(city, i){
@@ -234,9 +235,13 @@ function update(gamestate, dt){
 	var cityExists = false;
 	_.each(gamestate.cities, function(city){
 		if(city.isSilo && city.okay) siloActive = true;
-		else if(city.okay) cityExists = true;
+		else if(city.okay){
+			cityExists = true;
+			gamestate.score+=dt
+		}
 	})
 	gamestate.HOPE_LIVES = siloActive && cityExists
+	//Increment score
 }
 
 function spawnMissile(spawn_time, p_x, p_y, v_x, v_y, kind){
